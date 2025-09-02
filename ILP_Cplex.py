@@ -1,6 +1,6 @@
 from docplex.cp.model import CpoModel
 
-def create_assignment_model(n, m, c, model):
+def create_assignment_model(n, m, c, model, Ex_times):
     X = [[model.binary_var(name=f'X_{i}_{j}') for j in range(m)] for i in range(n)]
     S = [[model.binary_var(name=f'S_{i}_{t}') for t in range(c)] for i in range(n)]
     Wmax = model.integer_var(name="Wmax")
@@ -8,7 +8,7 @@ def create_assignment_model(n, m, c, model):
 
 def add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, precedence_relations):
     # (1) Objective
-    model.minimize(Wmax)
+    model.add_constraint(model.minimize(Wmax))
 
     # (2) Each task assigned to exactly one station
     for j in range(n):
@@ -19,33 +19,31 @@ def add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, preceden
     for k in range(m):
         model.add_constraint(model.sum([Ex_times[j] * X[j][k] for j in range(n)]) <= c)
         # print(" + ".join([f"{Ex_times[j]}*X[{j},{k}]" for j in range(n)]) + f" <= {c}")
+    
     # (4) Precedence: X[j,k] ≤ sum_{h<k} X[i,h] for i ≺ j
     for (i, j) in precedence_relations:
         for k in range(m):
-            if k > 0:
-                model.add_constraint(X[j-1][k] <= model.sum([X[i-1][h] for h in range(k)]))
-                # print(" + ".join([f"X[{i-1},{h}]" for h in range(k)]) + f" >= X[{j-1},{k}]")
-            else:
-                model.add_constraint(X[j-1][k] == 0)
-                # print(f"X[{j-1},{k}] = 0")
-
+            model.add_constraint(X[j-1][k] <= model.sum([X[i-1][h] for h in range(k + 1)]))
     # (5) Each task assigned to exactly one start time
     for j in range(n):
-        model.add_constraint(model.sum([S[j][t] for t in range(c)]) == 1)
-        # print(" + ".join([f"S[{j},{t}]" for t in range(c)]) + " = 1")
+        model.add_constraint(model.sum([S[j][t] for t in range(c - Ex_times[j] + 1)]) == 1)
+        # print(" + ".join([f"S[{j},{t}]" for t in range(c - Ex_times[j] + 1)]) + " = 1")
 
     # (6) S[j,t] ≤ sum_{τ=t-ti}^{t} S[i,τ] + 2 - X[i,k] - X[j,k]
     for (i, j) in precedence_relations:
-        for k in range(m):
-            for t in range(c):
-                model.add_constraint(
-                    S[j-1][t] <= model.sum([S[i-1][tau] for tau in range(max(0, t - Ex_times[i-1]))]) + 2 - X[i-1][k] - X[j-1][k]
-                )
-                #print(
-                #    f"S[{j-1},{t}] <= "
-                #    + " + ".join([f"S[{i-1},{tau}]" for tau in range(t - Ex_times[i-1])])
-                #    + f" + 2 - X[{i-1},{k}] - X[{j-1},{k}]"
-                #)
+        if i > 0 and j > 0:
+            for k in range(m):
+                for t in range(c - Ex_times[j-1] + 1):
+                    tau_range = range(t - Ex_times[i-1] + 1)
+                    model.add_constraint(
+                        S[j-1][t] <= model.sum([S[i-1][tau] for tau in tau_range]) + 2 - X[i-1][k] - X[j-1][k]
+                    )
+                    # In ràng buộc nếu cần
+                    # print(
+                    #     f"S[{j-1},{t}] <= "
+                    #     + " + ".join([f"S[{i-1},{tau}]" for tau in tau_range])
+                    #     + f" + 2 - X[{i-1},{k}] - X[{j-1},{k}]"
+                    # )
 
     # (7) X[i,k] + X[j,k] + sum_{τ=t-ti+1}^{t} S[i,τ] + sum_{τ=t-tj+1}^{t} S[j,τ] ≤ 3
     for i in range(n - 1):
@@ -54,8 +52,8 @@ def add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, preceden
                 for t in range(c):
                     model.add_constraint(
                         X[i][k] + X[j][k] +
-                        model.sum([S[i][tau] for tau in  range(max(0, t - Ex_times[i] + 1), t + 1)]) +
-                        model.sum([S[j][tau] for tau in  range(max(0, t - Ex_times[j] + 1), t + 1)])
+                        model.sum([S[i][tau] for tau in  range(t - Ex_times[i] + 1, t + 1)]) +
+                        model.sum([S[j][tau] for tau in  range(t - Ex_times[j] + 1, t + 1)])
                         <= 3
                     )
 
@@ -63,7 +61,7 @@ def add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, preceden
     for t in range(c):
         model.add_constraint(
             model.sum([
-                W[j] * model.sum([S[j][s] for s in range(max(0, t - Ex_times[j] + 1), t + 1)])
+                W[j] * model.sum([S[j][s] for s in range(t - Ex_times[j] + 1, t + 1)])
                 for j in range(n)
             ]) <= Wmax
         )
@@ -74,7 +72,7 @@ def add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, preceden
     return model
 
 def solve_assignment_problem(n, m, c, Ex_times, precedence_relations, W):
-    model, X, S, Wmax = create_assignment_model(n, m, c, CpoModel())
+    model, X, S, Wmax = create_assignment_model(n, m, c, CpoModel(), Ex_times)
     add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, precedence_relations)
     model.set_parameters(LogVerbosity="Quiet")
     return model.solve()
@@ -132,7 +130,8 @@ def get_value(solution, n, m, c, W, Ex_times):
 
     #Last row = sum(schedule[j][t] for j in range(n))
     schedule[m] = [sum(schedule[j][t] for j in range(m)) for t in range(c)]
-    return schedule, solution.get_value("Wmax")
+    peak = max(schedule[m])
+    return schedule, solution.get_value("Wmax"), peak
 
 def main(filename):
     n, W, precedence_relations, Ex_times = input_file(filename[0])
@@ -142,11 +141,12 @@ def main(filename):
     solution = solve_assignment_problem(n, m, c, Ex_times, precedence_relations, W)
     if solution:
         print(f"Solution for {filename[0]} with n={n}, m={m}, c={c}:")
-        schedule, Wmax = get_value(solution, n, m, c, W, Ex_times)
-        print("Wmax =", Wmax)
+        schedule, Wmax, peak = get_value(solution, n, m, c, W, Ex_times)
+        print("Peak =", peak)
+        """print("Wmax =", Wmax)
         print("Schedule:")
         for row in schedule:
-            print(row)
+            print(row)"""
 
     else:
         print("No solution found.")
@@ -186,5 +186,5 @@ file_name = [
     ["WARNECKER2", 25, 65]   #31
     ]
 
-for i in range(0, 3):
+for i in range(8, 9):
     main(file_name[i])

@@ -515,7 +515,145 @@ file_name = [
     ["WARNECKER2", 25, 65]   #31
     ]
 
-for input_in in file_name[29:]:
+file_name1 = [
+    # Easy families 
+    # MERTENS 
+    ["MERTENS", 6, 6],      # 0
+    ["MERTENS", 2, 18],     # 1
+    ["MERTENS", 5, 7],      # 2
+    ["MERTENS", 5, 8],      # 3
+    ["MERTENS", 3, 10],     # 4
+    ["MERTENS", 2, 15],     # 5
+    # Easy/MERTENS count: 6
+
+    # BOWMAN
+    ["BOWMAN", 5, 20],      # 6
+    # Easy/BOWMAN count: 1
+
+    # JAESCHKE
+    ["JAESCHKE", 8, 6],     # 7
+    ["JAESCHKE", 3, 18],    # 8
+    ["JAESCHKE", 6, 8],     # 9
+    ["JAESCHKE", 4, 10],    # 10
+    ["JAESCHKE", 3, 18],    # 11
+    # Easy/JAESCHKE count: 5
+
+    # JACKSON
+    ["JACKSON", 8, 7],      # 12
+    ["JACKSON", 3, 21],     # 13
+    ["JACKSON", 6, 9],      # 14
+    ["JACKSON", 5, 10],     # 15
+    ["JACKSON", 4, 13],     # 16
+    ["JACKSON", 4, 14],     # 17
+    # Easy/JACKSON count: 6
+
+    # MANSOOR
+    ["MANSOOR", 4, 48],     # 18
+    ["MANSOOR", 2, 94],     # 19
+    ["MANSOOR", 3, 62],     # 20
+    # Easy/MANSOOR count: 3
+
+    # MITCHELL
+    ["MITCHELL", 8, 14],    # 21
+    ["MITCHELL", 3, 39],    # 22
+    ["MITCHELL", 8, 15],    # 23
+    ["MITCHELL", 5, 21],    # 24
+    ["MITCHELL", 5, 26],    # 25
+    ["MITCHELL", 3, 35],    # 26
+    # Easy/MITCHELL count: 6
+
+    # ROSZIEG
+    ["ROSZIEG", 10, 14],    # 27
+    ["ROSZIEG", 4, 32],     # 28
+    ["ROSZIEG", 6, 25],     # 29
+    ["ROSZIEG", 8, 16],     # 30
+    ["ROSZIEG", 8, 18],     # 31
+    ["ROSZIEG", 6, 21],     # 32
+    # Easy/ROSZIEG count: 6
+
+    # HESKIA
+    ["HESKIA", 8, 138],     # 33
+    ["HESKIA", 3, 342],     # 34
+    ["HESKIA", 5, 205],     # 35
+    ["HESKIA", 5, 216],     # 36
+    ["HESKIA", 4, 256],     # 37
+    ["HESKIA", 4, 324],     # 38
+    # Easy/HESKIA count: 6
+
+    # Easy families total count: 39
+
+    # Hard families
+    # BUXEY
+    ["BUXEY", 7, 47],       # 40
+    ["BUXEY", 8, 41],       # 41
+    ["BUXEY", 11, 33],      # 42
+    ["BUXEY", 13, 27],      # 43
+    ["BUXEY", 12, 30],      # 44
+    ["BUXEY", 7, 54],       # 45
+    ["BUXEY", 10, 36],      # 46
+    # Hard/BUXEY count: 7
+
+    # SAWYER
+    ["SAWYER", 14, 25],     # 47
+    ["SAWYER", 7, 47],      # 48
+    ["SAWYER", 8, 41],      # 49
+    ["SAWYER", 12, 30],     # 50
+    ["SAWYER", 13, 27],     # 51
+    ["SAWYER", 11, 33],     # 52
+    ["SAWYER", 10, 36],     # 53 ???
+    ["SAWYER", 7, 54],      # 54
+    ["SAWYER", 5, 75],      # 55
+    # Hard/SAWYER count: 9
+
+    # GUNTHER
+    ["GUNTHER", 9, 54],     # 57
+    ["GUNTHER", 9, 61],     # 58
+    ["GUNTHER", 14, 41],    # 59
+    ["GUNTHER", 12, 44],    # 60
+    ["GUNTHER", 11, 49],    # 61
+    ["GUNTHER", 8, 69],     # 62
+    ["GUNTHER", 7, 81],     # 63
+    # Hard/GUNTHER count: 7
+
+    # WARNECKE
+    ["WARNECKE", 25, 65],   # 64
+    ["WARNECKE", 31, 54],   # 65
+    ["WARNECKE", 29, 56],   # 66
+    ["WARNECKE", 29, 58],   # 67 
+    ["WARNECKE", 27, 60],   # 68
+    ["WARNECKE", 27, 62],   # 69
+    ["WARNECKE", 24, 68],   # 70
+    ["WARNECKE", 23, 71],   # 71
+    ["WARNECKE", 22, 74],   # 72
+    ["WARNECKE", 21, 78],   # 73
+    ["WARNECKE", 20, 82],   # 74
+    ["WARNECKE", 19, 86],   # 75
+    ["WARNECKE", 17, 92],   # 76
+    ["WARNECKE", 17, 97],   # 77
+    ["WARNECKE", 15, 104],  # 78
+    ["WARNECKE", 14, 111],  # 79
+    # Hard/WARNECKE count: 16
+
+    # Lutz2
+    ["Lutz2", 49, 11],      # 80
+    ["Lutz2", 44, 12],      # 81
+    ["Lutz2", 40, 13],      # 82
+    ["Lutz2", 37, 14],      # 83
+    ["Lutz2", 34, 15],      # 84
+    ["Lutz2", 31, 16],      # 85
+    ["Lutz2", 29, 17],      # 86
+    ["Lutz2", 28, 18],      # 87
+    ["Lutz2", 26, 19],      # 88
+    ["Lutz2", 25, 20],      # 89
+    ["Lutz2", 24, 21],      # 90
+    # Hard/Lutz2 count: 11
+
+    # Hard families total count: 50
+
+    # Total: 89
+]
+
+for input_in in file_name1[13:14]:
     name = input_in[0]
     m = input_in[1]
     c = input_in[2]
