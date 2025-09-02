@@ -1,5 +1,8 @@
+from docplex.cp import config
+import docplex.cp
 from docplex.cp.model import CpoModel
 
+config.context.solver.local.execfile = "C:/Program Files/IBM/ILOG/CPLEX_Studio2211/cpoptimizer/bin/x64_win64/cpoptimizer.exe"
 def create_assignment_model(n, m, c, model, Ex_times):
     X = [[model.binary_var(name=f'X_{i}_{j}') for j in range(m)] for i in range(n)]
     S = [[model.binary_var(name=f'S_{i}_{t}') for t in range(c)] for i in range(n)]
