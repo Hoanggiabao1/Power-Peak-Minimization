@@ -1,8 +1,8 @@
-from docplex.cp import config
 import docplex.cp
 from docplex.cp.model import CpoModel
+import time
+import csv
 
-config.context.solver.local.execfile = "C:/Program Files/IBM/ILOG/CPLEX_Studio2211/cpoptimizer/bin/x64_win64/cpoptimizer.exe"
 def create_assignment_model(n, m, c, model, Ex_times):
     X = [[model.binary_var(name=f'X_{i}_{j}') for j in range(m)] for i in range(n)]
     S = [[model.binary_var(name=f'S_{i}_{t}') for t in range(c)] for i in range(n)]
@@ -10,26 +10,31 @@ def create_assignment_model(n, m, c, model, Ex_times):
     return model, X, S, Wmax
 
 def add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, precedence_relations):
+    cons = 0
     # (1) Objective
     model.add_constraint(model.minimize(Wmax))
-
+    cons += 1
     # (2) Each task assigned to exactly one station
     for j in range(n):
         model.add_constraint(model.sum([X[j][k] for k in range(m)]) == 1)
+        cons += 1
         # print(" + ".join([f"X[{j},{k}]" for k in range(m)]) + " = 1")
 
     # (3) Processing times at each station ≤ c
     for k in range(m):
         model.add_constraint(model.sum([Ex_times[j] * X[j][k] for j in range(n)]) <= c)
+        cons += 1
         # print(" + ".join([f"{Ex_times[j]}*X[{j},{k}]" for j in range(n)]) + f" <= {c}")
     
     # (4) Precedence: X[j,k] ≤ sum_{h<k} X[i,h] for i ≺ j
     for (i, j) in precedence_relations:
         for k in range(m):
             model.add_constraint(X[j-1][k] <= model.sum([X[i-1][h] for h in range(k + 1)]))
+            cons += 1
     # (5) Each task assigned to exactly one start time
     for j in range(n):
         model.add_constraint(model.sum([S[j][t] for t in range(c - Ex_times[j] + 1)]) == 1)
+        cons += 1
         # print(" + ".join([f"S[{j},{t}]" for t in range(c - Ex_times[j] + 1)]) + " = 1")
 
     # (6) S[j,t] ≤ sum_{τ=t-ti}^{t} S[i,τ] + 2 - X[i,k] - X[j,k]
@@ -41,6 +46,7 @@ def add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, preceden
                     model.add_constraint(
                         S[j-1][t] <= model.sum([S[i-1][tau] for tau in tau_range]) + 2 - X[i-1][k] - X[j-1][k]
                     )
+                    cons += 1
                     # In ràng buộc nếu cần
                     # print(
                     #     f"S[{j-1},{t}] <= "
@@ -59,6 +65,7 @@ def add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, preceden
                         model.sum([S[j][tau] for tau in  range(t - Ex_times[j] + 1, t + 1)])
                         <= 3
                     )
+                    cons += 1
 
     # (8) Power peak constraint
     for t in range(c):
@@ -68,17 +75,18 @@ def add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, preceden
                 for j in range(n)
             ]) <= Wmax
         )
+        cons += 1
         # print(" + ".join([f"{W[j]}*(" + " + ".join([f"S[{j},{s}]" for s in range(max(0, t - Ex_times[j]), t + 1)]) + ")" for j in range(n)]) + f" <= Wmax")
 
 
     # (9) Variable domains (already set by binary_var/integer_var)
-    return model
+    return model, cons
 
 def solve_assignment_problem(n, m, c, Ex_times, precedence_relations, W):
     model, X, S, Wmax = create_assignment_model(n, m, c, CpoModel(), Ex_times)
-    add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, precedence_relations)
-    model.set_parameters(LogVerbosity="Quiet")
-    return model.solve()
+    model, cons = add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, precedence_relations)
+    model.set_parameters(LogVerbosity="Quiet", TimeLimit=3600)
+    return model.solve(), len(X) + len(S), cons
 
 def input_file(file_name):
     W = []
@@ -136,23 +144,28 @@ def get_value(solution, n, m, c, W, Ex_times):
     peak = max(schedule[m])
     return schedule, solution.get_value("Wmax"), peak
 
-def main(filename):
+def write_to_csv(result):
+    with open("Output/result_cplex.csv", "a") as f:
+        writer = csv.writer(f)
+        writer.writerow(result)
+
+def optimal(filename):
     n, W, precedence_relations, Ex_times = input_file(filename[0])
     m = filename[1]  # Number of stations
     c = filename[2]  # Increased capacity to avoid infeasibility
     print(f"n={n}, m={m}, c={c}")
-    solution = solve_assignment_problem(n, m, c, Ex_times, precedence_relations, W)
+    start_time = time.time()
+    solution, var, cons = solve_assignment_problem(n, m, c, Ex_times, precedence_relations, W)
+    end_time = time.time()
+    print("Time taken:", end_time - start_time)
     if solution:
         print(f"Solution for {filename[0]} with n={n}, m={m}, c={c}:")
         schedule, Wmax, peak = get_value(solution, n, m, c, W, Ex_times)
         print("Peak =", peak)
-        """print("Wmax =", Wmax)
-        print("Schedule:")
-        for row in schedule:
-            print(row)"""
-
+        write_to_csv([filename[0], n, m, c, peak, var, cons, end_time - start_time])
     else:
         print("No solution found.")
+        write_to_csv([filename[0], n, m, c, "Timeout", var, cons, end_time - start_time])
 
 file_name = [
     ["MERTENS", 6, 6],      #0
@@ -190,4 +203,4 @@ file_name = [
     ]
 
 for i in range(8, 9):
-    main(file_name[i])
+    optimal(file_name[i])
