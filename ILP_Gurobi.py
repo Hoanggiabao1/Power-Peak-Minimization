@@ -3,12 +3,6 @@ import time
 import csv
 from gurobipy import GRB
 
-env = gurobipy.Env(empty=True)
-env.setParam('WLSACCESSID', '33d03b04-b102-4c1e-ac3a-28c7c2521a55')
-env.setParam('WLSSECRET', '818ea3b4-b954-4e96-bb07-2de85bbeb7c8')
-env.setParam('LICENSEID', 2663665)
-env.start()
-
 def create_assignment_model(n, m, c, model, Ex_times):
     X = [[model.addVar(vtype=gurobipy.GRB.BINARY, name=f'X_{i}_{j}') for j in range(m)] for i in range(n)]
     S = [[model.addVar(vtype=gurobipy.GRB.BINARY, name=f'S_{i}_{t}') for t in range(c)] for i in range(n)]
