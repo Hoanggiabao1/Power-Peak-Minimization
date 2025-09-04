@@ -394,7 +394,7 @@ def solve_new(wcnf, var):
                                 wcnf_filename
                                 ], capture_output=True, text=True, timeout=3600)
 
-        # print(f"Solver output:\n{result.stdout}")
+        print(f"Solver output:\n{result.stdout}")
         # Parse solver output
         lines = result.stdout.strip().split('\n')
         for line in lines:
@@ -433,7 +433,7 @@ def solve_MaxSat_SAML3P(n, m, c, Ex_Time, W, precedence_relations, file_name, in
     start_time= time.time()
     UB, LB = caculate_UB_and_LB(n, m, c, W, precedence_relations, Ex_Time, A, B, X)
     cal_UB_LB_time = time.time() - start_time
-    start_time = time.time()
+    '''start_time = time.time()
     wcnf, var = list_inaugural_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W)
     build_time = time.time() - start_time
     model = solve_new(wcnf, var)
@@ -455,7 +455,7 @@ def solve_MaxSat_SAML3P(n, m, c, Ex_Time, W, precedence_relations, file_name, in
         write_fancy_table_to_csv(file_name, n, m, c, var, 
                                  len(wcnf.soft), len(wcnf.hard), " ", "Unsat",
                                  done_time, "Normal", build_time, cal_UB_LB_time, filename="MaxHS_Normal.csv")
-    
+    '''
     start_time = time.time()
     wcnf2, var2 = list_binary_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W)
     build_time = time.time() - start_time
@@ -653,7 +653,7 @@ file_name1 = [
     # Total: 89
 ]
 
-for input_in in file_name1[13:14]:
+for input_in in file_name1[0:1]:
     name = input_in[0]
     m = input_in[1]
     c = input_in[2]

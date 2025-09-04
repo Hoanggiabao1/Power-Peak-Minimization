@@ -1,9 +1,0 @@
-Chay thuc nghiem ban cua Phong
-Bien doi: LB -> UB(Chay sat 1 lan)
-Bieu dien binh thuong
-Bieu dien Binary
-Tai sao UB' = 2^n - 1 ok
-Chạy SAT nhiều lần, thử các bộ giải mạnh
-Chạy EvalMaxSat + WMaxcdcl
-Incremental sat đã chụp
-Incremental Cadical
