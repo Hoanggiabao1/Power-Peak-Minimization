@@ -200,10 +200,7 @@ file_name = [
     ["BUXEY", 11, 33],      #25
     ["SAWYER", 12, 30],     #26
     ["GUNTHER", 9, 61],     #27
-    ["WARNECKER", 25, 65],   #28
-    ["SAWYER2", 12, 30],     #29
-    ["GUNTHER2", 9, 61],     #30
-    ["WARNECKER2", 25, 65]   #31
+    ["WARNECKE", 25, 65],   #28
     ]
 
 for i in range(29):
