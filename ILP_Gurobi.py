@@ -3,6 +3,9 @@ import time
 import csv
 from gurobipy import GRB
 
+env = gurobipy.Env(empty=True)
+env.start()
+
 def create_assignment_model(n, m, c, model, Ex_times):
     X = [[model.addVar(vtype=gurobipy.GRB.BINARY, name=f'X_{i}_{j}') for j in range(m)] for i in range(n)]
     S = [[model.addVar(vtype=gurobipy.GRB.BINARY, name=f'S_{i}_{t}') for t in range(c)] for i in range(n)]
@@ -89,7 +92,7 @@ def solve_assignment_problem(n, m, c, Ex_times, precedence_relations, W):
     model.Params.TimeLimit = 3600
     model.Params.LogToConsole = 0  # Nếu muốn tắt log
     model.optimize()
-    return model, len(X) + len(S), cons
+    return model, n*m + n*c, cons
 
 def input_file(file_name):
     W = []  
@@ -160,7 +163,7 @@ def optimal(filename):
     solution, var, cons = solve_assignment_problem(n, m, c, Ex_times, precedence_relations, W)
     end_time = time.time()
     print("Time taken:", end_time - start_time)
-    if solution:
+    if end_time - start_time < 3600:
         print(f"Solution for {filename[0]} with n={n}, m={m}, c={c}:")
         schedule, Wmax, peak = get_value(solution, n, m, c, W, Ex_times)
         print("Peak =", peak)
@@ -307,5 +310,5 @@ file_name = [
     # Total: 89
     ]
 
-for i in range(10):
+for i in range(len(file_name)):
     optimal(file_name[i])

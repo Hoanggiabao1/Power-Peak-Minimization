@@ -4,20 +4,17 @@ import time
 import threading
 import signal
 from tracemalloc import start
-from turtle import st
 from numpy import var
 from pysat.solvers import Glucose3
 import fileinput
 from tabulate import tabulate
-import webbrowser
-import sys
 from pysat.pb import PBEnc
 import math
 import time
 import fileinput
 import csv
-import sys
 import subprocess
+from pysat.pb import EncType
 
 # input variables in database ?? mertens 1
 n = 7 #58
@@ -400,7 +397,7 @@ def generate_binary(n,m,c, X, S, A, W, UB, LB, clauses, var_counter):
         variables.append(binU[i])
         weight.append(2**i)
     
-    pb_clauses_lb = PBEnc.geq(lits=variables, weights=weight, bound=LB, top_id=var)
+    pb_clauses_lb = PBEnc.geq(lits=variables, weights=weight, bound=LB, top_id=var, encoding=EncType.binmerge)
 
     if pb_clauses_lb.nv > var:
             var = pb_clauses_lb.nv + 1
@@ -423,7 +420,7 @@ def generate_binary(n,m,c, X, S, A, W, UB, LB, clauses, var_counter):
         # Create PB constraint: sum(power_terms) - sum(binary_terms) <= 0
         # This is equivalent to: sum(power_terms) <= sum(binary_terms)
         pb_clauses = PBEnc.leq(lits=variables, weights=weight, bound=upper_bound,
-                                 top_id=var)
+                                 top_id=var, encoding=EncType.binmerge)
             
         # Update variable counter
         if pb_clauses.nv > var:
@@ -435,41 +432,7 @@ def generate_binary(n,m,c, X, S, A, W, UB, LB, clauses, var_counter):
 
     return clauses, soft_clauses, var
 
-def generate_inagural(n,m,c, X, S, A, W, UB, LB, clauses, var_counter):
-    soft_clauses = []
-    U = []
-    for i in range(LB + 1, UB):
-        U.append(var_counter + 1)
-        var_counter += 1
-        soft_clauses.append([[-var_counter], 1])
-    
-    for i in range(1, len(U)):
-        clauses.append([-U[i], U[i-1]])
-    
-    var = var_counter + 1
-    for t in range(c):
-        variables = []
-        weight = []
-        for i in range(len(U)):
-            variables.append(-U[i])
-            weight.append(1)
-        for i in range(n):
-            variables.append(A[i][t])
-            weight.append(W[i])
-        pb_clauses = PBEnc.leq( lits=variables, weights=weight, 
-                                bound=UB, 
-                                top_id=var)
-        # Update variable counter for any new variables created by PBEnc
-        if pb_clauses.nv > var:
-            var = pb_clauses.nv + 1
-            
-        # Add the encoded clauses to WCNF
-        for clause in pb_clauses.clauses:
-            clauses.append(clause)
-
-    return clauses, soft_clauses, var
-
-def write_wcnf_with_h_prefix(clauses, soft_clauses, var, filename = "problem.wcnf"):
+def write_wcnf_with_h_prefix(clauses, soft_clauses, var, filename = "problem_eval.wcnf"):
     with open(filename, 'w') as f:
         # Calculate statistics
         total_clauses = len(clauses) + len(soft_clauses)
@@ -489,10 +452,11 @@ def write_wcnf_with_h_prefix(clauses, soft_clauses, var, filename = "problem.wcn
             f.write(f"{weight} ")
             f.write(" " + str(clause))
             f.write(" 0\n")
+
 def solve_maxsat():
     try:
         result = subprocess.run(
-                                ["wsl","./EvalMaxSAT_bin", "problem.wcnf"],
+                                ["./EvalMaxSAT_bin", "problem_eval.wcnf"],
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 text=True, timeout=3600
@@ -569,7 +533,7 @@ def optimal(X,S,A,n,m,c,start_time):
     print("initial value:",bestValue)
     print("initial station:",station)
     clauses, soft_clauses, var = generate_binary(n,m,c, X, S, A, W, bestValue, max(W), clauses, start)
-    write_wcnf_with_h_prefix(clauses, soft_clauses, var, filename = "problem.wcnf")
+    write_wcnf_with_h_prefix(clauses, soft_clauses, var, filename = "problem_eval.wcnf")
     model = solve_maxsat()
     if model is None:
         print("Time out")
@@ -579,7 +543,7 @@ def optimal(X,S,A,n,m,c,start_time):
     print("Best value =", bestValue)
     return bestValue, var, clauses, soft_clauses, "Optimal"
 
-def write_fancy_table_to_csv(ins, n, m, c, val, s_cons, h_cons, peak, status, time, filename="Binary.csv"):
+def write_fancy_table_to_csv(ins, n, m, c, val, s_cons, h_cons, peak, status, time, filename="Eval_Binary_staircase.csv"):
     with open("Output/" + filename, "a", newline='') as f:
         writer = csv.writer(f)
         row = []
@@ -595,37 +559,144 @@ def write_fancy_table_to_csv(ins, n, m, c, val, s_cons, h_cons, peak, status, ti
         row.append(str(time))
         writer.writerow(row)
 
+
 file_name = [
-    ["MERTENS", 6, 6],      #0
-    ["MERTENS", 2, 18],     #1
-    ["BOWMAN", 5, 20],      #2
-    ["JAESCHKE", 8, 6],     #3
-    ["JAESCHKE", 3, 18],    #4
-    ["JACKSON", 8, 7],      #5
-    ["JACKSON", 3, 21],     #6
-    ["MANSOOR", 4, 48],     #7
-    ["MANSOOR", 2, 94],     #8
-    ["MITCHELL", 8, 14],    #9
-    ["MITCHELL", 3, 39],    #10
-    ["ROSZIEG", 10, 14],    #11
-    ["ROSZIEG", 4, 32],     #12
-    ["BUXEY", 14, 25],      #13
-    ["BUXEY", 7, 47],       #14
-    ["SAWYER", 14, 25],     #15
-    ["SAWYER", 7, 47],      #16
-    ["GUNTHER", 14, 40],    #17
-    ["GUNTHER", 9, 54],     #18
-    ["BUXEY", 8, 41],       #19
-    ["ROSZIEG", 6, 25],     #20
-    ["BUXEY", 11, 33],      #21
-    ["SAWYER", 12, 30],     #22
-    ["SAWYER", 8, 41],      #23
-    ["GUNTHER", 9, 61],     #24
-    ["HESKIA", 8, 138],     #25
-    ["HESKIA", 3, 342],     #26
-    ["HESKIA", 5, 205],      #27
-    ["WARNECKER", 25, 65]   #28
-    ]
+    # Easy families 
+    # MERTENS 
+    ["MERTENS", 6, 6],      # 0
+    ["MERTENS", 2, 18],     # 1
+    ["MERTENS", 5, 7],      # 2
+    ["MERTENS", 5, 8],      # 3
+    ["MERTENS", 3, 10],     # 4
+    ["MERTENS", 2, 15],     # 5
+    # Easy/MERTENS count: 6
+
+    # BOWMAN
+    ["BOWMAN", 5, 20],      # 6
+    # Easy/BOWMAN count: 1
+
+    # JAESCHKE
+    ["JAESCHKE", 8, 6],     # 7
+    ["JAESCHKE", 3, 18],    # 8
+    ["JAESCHKE", 6, 8],     # 9
+    ["JAESCHKE", 4, 10],    # 10
+    ["JAESCHKE", 3, 18],    # 11
+    # Easy/JAESCHKE count: 5
+
+    # JACKSON
+    ["JACKSON", 8, 7],      # 12
+    ["JACKSON", 3, 21],     # 13
+    ["JACKSON", 6, 9],      # 14
+    ["JACKSON", 5, 10],     # 15
+    ["JACKSON", 4, 13],     # 16
+    ["JACKSON", 4, 14],     # 17
+    # Easy/JACKSON count: 6
+
+    # MANSOOR
+    ["MANSOOR", 4, 48],     # 18
+    ["MANSOOR", 2, 94],     # 19
+    ["MANSOOR", 3, 62],     # 20
+    # Easy/MANSOOR count: 3
+
+    # MITCHELL
+    ["MITCHELL", 8, 14],    # 21
+    ["MITCHELL", 3, 39],    # 22
+    ["MITCHELL", 8, 15],    # 23
+    ["MITCHELL", 5, 21],    # 24
+    ["MITCHELL", 5, 26],    # 25
+    ["MITCHELL", 3, 35],    # 26
+    # Easy/MITCHELL count: 6
+
+    # ROSZIEG
+    ["ROSZIEG", 10, 14],    # 27
+    ["ROSZIEG", 4, 32],     # 28
+    ["ROSZIEG", 6, 25],     # 29
+    ["ROSZIEG", 8, 16],     # 30
+    ["ROSZIEG", 8, 18],     # 31
+    ["ROSZIEG", 6, 21],     # 32
+    # Easy/ROSZIEG count: 6
+
+    # HESKIA
+    ["HESKIA", 8, 138],     # 33
+    ["HESKIA", 3, 342],     # 34
+    ["HESKIA", 5, 205],     # 35
+    ["HESKIA", 5, 216],     # 36
+    ["HESKIA", 4, 256],     # 37
+    ["HESKIA", 4, 324],     # 38
+    # Easy/HESKIA count: 6
+
+    # Easy families total count: 39
+
+    # Hard families
+    # BUXEY
+    ["BUXEY", 7, 47],       # 39
+    ["BUXEY", 8, 41],       # 40
+    ["BUXEY", 11, 33],      # 41
+    ["BUXEY", 13, 27],      # 42
+    ["BUXEY", 12, 30],      # 43
+    ["BUXEY", 7, 54],       # 44
+    ["BUXEY", 10, 36],      # 45
+    # Hard/BUXEY count: 7
+
+    # SAWYER
+    ["SAWYER", 14, 25],     # 46
+    ["SAWYER", 7, 47],      # 47
+    ["SAWYER", 8, 41],      # 48
+    ["SAWYER", 12, 30],     # 49
+    ["SAWYER", 13, 27],     # 50
+    ["SAWYER", 11, 33],     # 51
+    ["SAWYER", 10, 36],     # 52
+    ["SAWYER", 7, 54],      # 53
+    ["SAWYER", 5, 75],      # 54
+    # Hard/SAWYER count: 9
+
+    # GUNTHER
+    ["GUNTHER", 9, 54],     # 55
+    ["GUNTHER", 9, 61],     # 56
+    ["GUNTHER", 14, 41],    # 57
+    ["GUNTHER", 12, 44],    # 58
+    ["GUNTHER", 11, 49],    # 59
+    ["GUNTHER", 8, 69],     # 60
+    ["GUNTHER", 7, 81],     # 61
+    # Hard/GUNTHER count: 7
+
+    # WARNECKE
+    ["WARNECKE", 25, 65],   # 62
+    ["WARNECKE", 31, 54],   # 63
+    ["WARNECKE", 29, 56],   # 64
+    ["WARNECKE", 29, 58],   # 65 
+    ["WARNECKE", 27, 60],   # 66
+    ["WARNECKE", 27, 62],   # 67
+    ["WARNECKE", 24, 68],   # 68
+    ["WARNECKE", 23, 71],   # 69
+    ["WARNECKE", 22, 74],   # 70
+    ["WARNECKE", 21, 78],   # 71
+    ["WARNECKE", 20, 82],   # 72
+    ["WARNECKE", 19, 86],   # 73
+    ["WARNECKE", 17, 92],   # 74
+    ["WARNECKE", 17, 97],   # 75
+    ["WARNECKE", 15, 104],  # 76
+    ["WARNECKE", 14, 111],  # 77
+    # Hard/WARNECKE count: 16
+
+    # LUTZ2
+    ["LUTZ2", 49, 11],      # 78
+    ["LUTZ2", 44, 12],      # 79
+    ["LUTZ2", 40, 13],      # 80
+    ["LUTZ2", 37, 14],      # 81
+    ["LUTZ2", 34, 15],      # 82
+    ["LUTZ2", 31, 16],      # 83
+    ["LUTZ2", 29, 17],      # 84
+    ["LUTZ2", 28, 18],      # 85
+    ["LUTZ2", 26, 19],      # 86
+    ["LUTZ2", 25, 20],      # 87
+    ["LUTZ2", 24, 21],      # 88
+    # Hard/LUTZ2 count: 11
+
+    # Hard families total count: 50
+
+    # Total: 89
+]
 
 for i in file_name:
     with open('task_power/'+i[0]+'.txt', 'r') as file:

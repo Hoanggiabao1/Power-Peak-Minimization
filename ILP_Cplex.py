@@ -162,7 +162,7 @@ def optimal(filename):
     solution, var, cons = solve_assignment_problem(n, m, c, Ex_times, precedence_relations, W)
     end_time = time.time()
     print("Time taken:", end_time - start_time)
-    if solution:
+    if solution and end_time - start_time < 3600:
         print(f"Solution for {filename[0]} with n={n}, m={m}, c={c}:")
         schedule, Wmax, peak = get_value(solution, n, m, c, W, Ex_times)
         print("Peak =", peak)
@@ -309,5 +309,5 @@ file_name = [
     # Total: 89
     ]
 
-for i in range(len(file_name)):
+for i in range(33, len(file_name)):
     optimal(file_name[i])

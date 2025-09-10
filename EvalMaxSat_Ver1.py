@@ -156,7 +156,8 @@ def list_inaugural_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W):
         # Create PB constraint: sum(coeffs[i] * lits[i]) <= UB
         pb_clauses = PBEnc.leq( lits=lits, weights=coeffs, 
                                 bound=UB, 
-                                top_id=start, encoding=EncType.binmerge)
+                                top_id=start,
+                                encoding = EncType.sortnetwrk)
         # Update variable counter for any new variables created by PBEnc
         if pb_clauses.nv > start:
             start = pb_clauses.nv + 1
@@ -196,7 +197,8 @@ def list_binary_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W):
         
     # Create PB constraint for lower bound: sum >= LB
     pb_clauses_lb = PBEnc.geq(lits=lits_lb, weights=coeffs_lb, bound=LB,
-                                top_id=start, encoding=EncType.binmerge)
+                                top_id=start,
+                                encoding = EncType.sortnetwrk)
     # Update variable counter
     if pb_clauses_lb.nv > start:
         start = pb_clauses_lb.nv + 1
@@ -227,7 +229,8 @@ def list_binary_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W):
         # Create PB constraint: sum(power_terms) - sum(binary_terms) <= 0
         # This is equivalent to: sum(power_terms) <= sum(binary_terms)
         pb_clauses = PBEnc.leq(lits=lits, weights=coeffs, bound=upper_bound,
-                                 top_id=start, encoding=EncType.binmerge)
+                                 top_id=start,
+                                encoding = EncType.sortnetwrk)
             
         # Update variable counter
         if pb_clauses.nv > start:
@@ -257,7 +260,7 @@ def get_value(n, m, c, model, W, UB = 0):
     peak = max(ans_map[m][i] for i in range(c))
     return ans_map, peak
 
-def write_fancy_table_to_csv(ins, n, m, c, val, s_cons, h_cons, peak, status, time, type, build_time, cal_time, filename="Eval_paper.csv"):
+def write_fancy_table_to_csv(ins, n, m, c, val, s_cons, h_cons, peak, status, time, type, build_time, cal_time, filename="Output.csv"):
     with open("Output/" + filename, "a", newline='') as f:
         writer = csv.writer(f)
         row = []
@@ -384,18 +387,18 @@ def write_wcnf_with_h_prefix(wcnf, var, filename):
                 continue
 
 def solve_new(wcnf, var):
-    wcnf_filename = "problemeval.wcnf"
+    wcnf_filename = "problem_eval.wcnf"
     write_wcnf_with_h_prefix(wcnf, var, wcnf_filename)
     # Use external MaxSAT solver (tt-open-wbo-inc)
     try:
         result = subprocess.run(
-                                ["wsl","./EvalMaxSAT_bin", "problem.wcnf"],
+                                ['./EvalMaxSAT_bin', wcnf_filename],
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 text=True, timeout=3600
                                 )
 
-        #print(f"Solver output:\n{result.stdout}")
+        # print(f"Solver output:\n{result.stdout}")
         # Parse solver output
         lines = result.stdout.strip().split('\n')
         for line in lines:
@@ -434,7 +437,7 @@ def solve_MaxSat_SAML3P(n, m, c, Ex_Time, W, precedence_relations, file_name, in
     start_time= time.time()
     UB, LB = caculate_UB_and_LB(n, m, c, W, precedence_relations, Ex_Time, A, B, X)
     cal_UB_LB_time = time.time() - start_time
-    # Inaugural constraints
+    #Inagural encoding
     '''start_time = time.time()
     wcnf, var = list_inaugural_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W)
     build_time = time.time() - start_time
@@ -451,14 +454,13 @@ def solve_MaxSat_SAML3P(n, m, c, Ex_Time, W, precedence_relations, file_name, in
                                       peak = peak)
         write_fancy_table_to_csv(file_name, n, m, c, var, 
                                  len(wcnf.soft), len(wcnf.hard), peak, "optimal",
-                                 done_time, "Normal", build_time, cal_UB_LB_time, filename="Eval_Normal.csv")
+                                 done_time, "Normal", build_time, cal_UB_LB_time, filename="Eval_Normal_2024.csv")
     else:
         print("UNSAT")
         write_fancy_table_to_csv(file_name, n, m, c, var, 
                                  len(wcnf.soft), len(wcnf.hard), " ", "Unsat",
-                                 done_time, "Normal", build_time, cal_UB_LB_time, filename="Eval_Normal.csv")'''
-
-    # Binary constraints
+                                 done_time, "Normal", build_time, cal_UB_LB_time, filename="Eval_Normal_2024.csv")'''
+    #Binary encoding
     start_time = time.time()
     wcnf2, var2 = list_binary_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W)
     build_time = time.time() - start_time
@@ -476,14 +478,49 @@ def solve_MaxSat_SAML3P(n, m, c, Ex_Time, W, precedence_relations, file_name, in
         print("Power peak: ", peak)
         write_fancy_table_to_csv(file_name, n, m, c, var2, 
                                  len(wcnf2.soft), len(wcnf2.hard), peak, "optimal",
-                                 done_time, "Binary", build_time, cal_UB_LB_time, filename="Eval_Binary.csv")
+                                 done_time, "Binary", build_time, cal_UB_LB_time, filename="Eval_Binary_2024.csv")
     else:
         print("UNSAT")
         write_fancy_table_to_csv(file_name, n, m, c, var2, 
                                  len(wcnf2.soft), len(wcnf2.hard), " ", "timeout",
-                                 done_time, "Binary", build_time, cal_UB_LB_time, filename="Eval_Binary.csv")
+                                 done_time, "Binary", build_time, cal_UB_LB_time, filename="Eval_Binary_2024.csv")
 
 file_name = [
+    ["MERTENS", 6, 6],      #0
+    ["MERTENS", 2, 18],     #1
+    ["BOWMAN", 5, 20],      #2
+    ["JAESCHKE", 8, 6],     #3
+    ["JAESCHKE", 3, 18],    #4
+    ["JACKSON", 8, 7],      #5
+    ["JACKSON", 3, 21],     #6
+    ["MANSOOR", 4, 48],     #7
+    ["MANSOOR", 2, 94],     #8
+    ["MITCHELL", 8, 14],    #9
+    ["MITCHELL", 3, 39],    #10
+    ["ROSZIEG", 10, 14],    #11
+    ["ROSZIEG", 4, 32],     #12
+    ["BUXEY", 14, 25],      #13
+    ["BUXEY", 7, 47],       #14
+    ["SAWYER", 14, 25],     #15
+    ["SAWYER", 7, 47],      #16
+    ["GUNTHER", 14, 40],    #17
+    ["GUNTHER", 9, 54],     #18
+    ["HESKIA", 8, 138],     #19
+    ["BUXEY", 8, 41],       #20
+    ["ROSZIEG", 6, 25],     #21
+    ["SAWYER", 8, 41],      #22
+    ["HESKIA", 3, 342],     #23
+    ["HESKIA", 5, 205],     #24
+    ["BUXEY", 11, 33],      #25
+    ["SAWYER", 12, 30],     #26
+    ["GUNTHER", 9, 61],     #27
+    ["WARNECKER", 25, 65],   #28
+    ["SAWYER2", 12, 30],     #29
+    ["GUNTHER2", 9, 61],     #30
+    ["WARNECKER2", 25, 65]   #31
+    ]
+
+file_name1 = [
     # Easy families 
     # MERTENS 
     ["MERTENS", 6, 6],      # 0
@@ -587,7 +624,7 @@ file_name = [
     ["WARNECKE", 25, 65],   # 62
     ["WARNECKE", 31, 54],   # 63
     ["WARNECKE", 29, 56],   # 64
-    ["WARNECKE", 29, 58],   # 65
+    ["WARNECKE", 29, 58],   # 65 
     ["WARNECKE", 27, 60],   # 66
     ["WARNECKE", 27, 62],   # 67
     ["WARNECKE", 24, 68],   # 68
@@ -619,9 +656,9 @@ file_name = [
     # Hard families total count: 50
 
     # Total: 89
-    ]
+]
 
-for input_in in file_name:
+for input_in in file_name1[33:34]:
     name = input_in[0]
     m = input_in[1]
     c = input_in[2]

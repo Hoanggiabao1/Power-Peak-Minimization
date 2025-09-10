@@ -156,7 +156,8 @@ def list_inaugural_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W):
         # Create PB constraint: sum(coeffs[i] * lits[i]) <= UB
         pb_clauses = PBEnc.leq( lits=lits, weights=coeffs, 
                                 bound=UB, 
-                                top_id=start, encoding=EncType.binmerge)
+                                top_id=start,
+                                encoding = EncType.binmerge)
         # Update variable counter for any new variables created by PBEnc
         if pb_clauses.nv > start:
             start = pb_clauses.nv + 1
@@ -196,7 +197,8 @@ def list_binary_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W):
         
     # Create PB constraint for lower bound: sum >= LB
     pb_clauses_lb = PBEnc.geq(lits=lits_lb, weights=coeffs_lb, bound=LB,
-                                top_id=start, encoding=EncType.binmerge)
+                                top_id=start,
+                                encoding = EncType.binmerge)
     # Update variable counter
     if pb_clauses_lb.nv > start:
         start = pb_clauses_lb.nv + 1
@@ -227,7 +229,8 @@ def list_binary_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W):
         # Create PB constraint: sum(power_terms) - sum(binary_terms) <= 0
         # This is equivalent to: sum(power_terms) <= sum(binary_terms)
         pb_clauses = PBEnc.leq(lits=lits, weights=coeffs, bound=upper_bound,
-                                 top_id=start, encoding=EncType.binmerge)
+                                top_id=start,
+                                encoding = EncType.binmerge)
             
         # Update variable counter
         if pb_clauses.nv > start:
@@ -384,17 +387,17 @@ def write_wcnf_with_h_prefix(wcnf, var, filename):
                 continue
 
 def solve_new(wcnf, var):
-    wcnf_filename = "problemmaxhs.wcnf"
+    wcnf_filename = "problem_maxHS.wcnf"
     write_wcnf_with_h_prefix(wcnf, var, wcnf_filename)
     # Use external MaxSAT solver (tt-open-wbo-inc)
     try:
         result = subprocess.run([
-                                'wsl', './maxhs',
+                                './maxhs',
                                 '-printSoln',
                                 wcnf_filename
                                 ], capture_output=True, text=True, timeout=3600)
 
-        print(f"Solver output:\n{result.stdout}")
+        # print(f"Solver output:\n{result.stdout}")
         # Parse solver output
         lines = result.stdout.strip().split('\n')
         for line in lines:
@@ -433,6 +436,8 @@ def solve_MaxSat_SAML3P(n, m, c, Ex_Time, W, precedence_relations, file_name, in
     start_time= time.time()
     UB, LB = caculate_UB_and_LB(n, m, c, W, precedence_relations, Ex_Time, A, B, X)
     cal_UB_LB_time = time.time() - start_time
+
+    #Inaugural constraints
     '''start_time = time.time()
     wcnf, var = list_inaugural_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W)
     build_time = time.time() - start_time
@@ -449,13 +454,14 @@ def solve_MaxSat_SAML3P(n, m, c, Ex_Time, W, precedence_relations, file_name, in
                                       peak = peak)
         write_fancy_table_to_csv(file_name, n, m, c, var, 
                                  len(wcnf.soft), len(wcnf.hard), peak, "optimal",
-                                 done_time, "Normal", build_time, cal_UB_LB_time, filename="MaxHS_Normal.csv")
+                                 done_time, "Normal", build_time, cal_UB_LB_time, filename="MaxHS_Normal_2024.csv")
     else:
         print("UNSAT")
         write_fancy_table_to_csv(file_name, n, m, c, var, 
                                  len(wcnf.soft), len(wcnf.hard), " ", "Unsat",
-                                 done_time, "Normal", build_time, cal_UB_LB_time, filename="MaxHS_Normal.csv")
-    '''
+                                 done_time, "Normal", build_time, cal_UB_LB_time, filename="MaxHS_Normal_2024.csv")'''
+
+    #Binary constraints
     start_time = time.time()
     wcnf2, var2 = list_binary_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W)
     build_time = time.time() - start_time
@@ -473,14 +479,49 @@ def solve_MaxSat_SAML3P(n, m, c, Ex_Time, W, precedence_relations, file_name, in
         print("Power peak: ", peak)
         write_fancy_table_to_csv(file_name, n, m, c, var2, 
                                  len(wcnf2.soft), len(wcnf2.hard), peak, "optimal",
-                                 done_time, "Binary", build_time, cal_UB_LB_time, filename="MaxHS_Binary.csv")
+                                 done_time, "Binary", build_time, cal_UB_LB_time, filename="MaxHS_Binary_2024.csv")
     else:
         print("UNSAT")
         write_fancy_table_to_csv(file_name, n, m, c, var2, 
                                  len(wcnf2.soft), len(wcnf2.hard), " ", "timeout",
-                                 done_time, "Binary", build_time, cal_UB_LB_time, filename="MaxHS_Binary.csv")
+                                 done_time, "Binary", build_time, cal_UB_LB_time, filename="MaxHS_Binary_2024.csv")
 
 file_name = [
+    ["MERTENS", 6, 6],      #0
+    ["MERTENS", 2, 18],     #1
+    ["BOWMAN", 5, 20],      #2
+    ["JAESCHKE", 8, 6],     #3
+    ["JAESCHKE", 3, 18],    #4
+    ["JACKSON", 8, 7],      #5
+    ["JACKSON", 3, 21],     #6
+    ["MANSOOR", 4, 48],     #7
+    ["MANSOOR", 2, 94],     #8
+    ["MITCHELL", 8, 14],    #9
+    ["MITCHELL", 3, 39],    #10
+    ["ROSZIEG", 10, 14],    #11
+    ["ROSZIEG", 4, 32],     #12
+    ["BUXEY", 14, 25],      #13
+    ["BUXEY", 7, 47],       #14
+    ["SAWYER", 14, 25],     #15
+    ["SAWYER", 7, 47],      #16
+    ["GUNTHER", 14, 40],    #17
+    ["GUNTHER", 9, 54],     #18
+    ["HESKIA", 8, 138],     #19
+    ["BUXEY", 8, 41],       #20
+    ["ROSZIEG", 6, 25],     #21
+    ["SAWYER", 8, 41],      #22
+    ["HESKIA", 3, 342],     #23
+    ["HESKIA", 5, 205],     #24
+    ["BUXEY", 11, 33],      #25
+    ["SAWYER", 12, 30],     #26
+    ["GUNTHER", 9, 61],     #27
+    ["WARNECKER", 25, 65],   #28
+    ["SAWYER2", 12, 30],     #29
+    ["GUNTHER2", 9, 61],     #30
+    ["WARNECKER2", 25, 65]   #31
+    ]
+
+file_name1 = [
     # Easy families 
     # MERTENS 
     ["MERTENS", 6, 6],      # 0
@@ -550,67 +591,67 @@ file_name = [
     # Hard families
     # BUXEY
     ["BUXEY", 7, 47],       # 39
-    ["BUXEY", 8, 41],       # 40
-    ["BUXEY", 11, 33],      # 41
-    ["BUXEY", 13, 27],      # 42
-    ["BUXEY", 12, 30],      # 43
-    ["BUXEY", 7, 54],       # 44
-    ["BUXEY", 10, 36],      # 45
+    ["BUXEY", 8, 41],       # 41
+    ["BUXEY", 11, 33],      # 42
+    ["BUXEY", 13, 27],      # 43
+    ["BUXEY", 12, 30],      # 44
+    ["BUXEY", 7, 54],       # 45
+    ["BUXEY", 10, 36],      # 46
     # Hard/BUXEY count: 7
 
     # SAWYER
-    ["SAWYER", 14, 25],     # 46
-    ["SAWYER", 7, 47],      # 47
-    ["SAWYER", 8, 41],      # 48
-    ["SAWYER", 12, 30],     # 49
-    ["SAWYER", 13, 27],     # 50
-    ["SAWYER", 11, 33],     # 51
-    ["SAWYER", 10, 36],     # 52
-    ["SAWYER", 7, 54],      # 53
-    ["SAWYER", 5, 75],      # 54
+    ["SAWYER", 14, 25],     # 47
+    ["SAWYER", 7, 47],      # 48
+    ["SAWYER", 8, 41],      # 49
+    ["SAWYER", 12, 30],     # 50
+    ["SAWYER", 13, 27],     # 51
+    ["SAWYER", 11, 33],     # 52
+    ["SAWYER", 10, 36],     # 53 ???
+    ["SAWYER", 7, 54],      # 54
+    ["SAWYER", 5, 75],      # 55
     # Hard/SAWYER count: 9
 
     # GUNTHER
-    ["GUNTHER", 9, 54],     # 55
-    ["GUNTHER", 9, 61],     # 56
-    ["GUNTHER", 14, 41],    # 57
-    ["GUNTHER", 12, 44],    # 58
-    ["GUNTHER", 11, 49],    # 59
-    ["GUNTHER", 8, 69],     # 60
-    ["GUNTHER", 7, 81],     # 61
+    ["GUNTHER", 9, 54],     # 57
+    ["GUNTHER", 9, 61],     # 58
+    ["GUNTHER", 14, 41],    # 59
+    ["GUNTHER", 12, 44],    # 60
+    ["GUNTHER", 11, 49],    # 61
+    ["GUNTHER", 8, 69],     # 62
+    ["GUNTHER", 7, 81],     # 63
     # Hard/GUNTHER count: 7
 
     # WARNECKE
-    ["WARNECKE", 25, 65],   # 62
-    ["WARNECKE", 31, 54],   # 63
-    ["WARNECKE", 29, 56],   # 64
-    ["WARNECKE", 29, 58],   # 65
-    ["WARNECKE", 27, 60],   # 66
-    ["WARNECKE", 27, 62],   # 67
-    ["WARNECKE", 24, 68],   # 68
-    ["WARNECKE", 23, 71],   # 69
-    ["WARNECKE", 22, 74],   # 70
-    ["WARNECKE", 21, 78],   # 71
-    ["WARNECKE", 20, 82],   # 72
-    ["WARNECKE", 19, 86],   # 73
-    ["WARNECKE", 17, 92],   # 74
-    ["WARNECKE", 17, 97],   # 75
-    ["WARNECKE", 15, 104],  # 76
-    ["WARNECKE", 14, 111],  # 77
+    ["WARNECKE", 25, 65],   # 64
+    ["WARNECKE", 31, 54],   # 65
+    ["WARNECKE", 29, 56],   # 66
+    ["WARNECKE", 29, 58],   # 67 
+    ["WARNECKE", 27, 60],   # 68
+    ["WARNECKE", 27, 62],   # 69
+    ["WARNECKE", 24, 68],   # 70
+    ["WARNECKE", 23, 71],   # 71
+    ["WARNECKE", 22, 74],   # 72
+    ["WARNECKE", 21, 78],   # 73
+    ["WARNECKE", 20, 82],   # 74
+    ["WARNECKE", 19, 86],   # 75
+    ["WARNECKE", 17, 92],   # 76
+    ["WARNECKE", 17, 97],   # 77
+    ["WARNECKE", 15, 104],  # 78
+    ["WARNECKE", 14, 111],  # 79
     # Hard/WARNECKE count: 16
 
     # LUTZ2
-    ["LUTZ2", 49, 11],      # 78
-    ["LUTZ2", 44, 12],      # 79
-    ["LUTZ2", 40, 13],      # 80
-    ["LUTZ2", 37, 14],      # 81
-    ["LUTZ2", 34, 15],      # 82
-    ["LUTZ2", 31, 16],      # 83
-    ["LUTZ2", 29, 17],      # 84
-    ["LUTZ2", 28, 18],      # 85
-    ["LUTZ2", 26, 19],      # 86
-    ["LUTZ2", 25, 20],      # 87
-    ["LUTZ2", 24, 21],      # 88
+    ["LUTZ2", 49, 11],      # 80
+    ["LUTZ2", 44, 12],      # 81
+    ["LUTZ2", 40, 13],      # 82
+    ["LUTZ2", 37, 14],      # 83
+    ["LUTZ2", 34, 15],      # 84
+    ["LUTZ2", 31, 16],      # 85
+    ["LUTZ2", 29, 17],      # 86
+    ["LUTZ2", 28, 18],      # 87
+    ["LUTZ2", 26, 19],      # 88
+    ["LUTZ2", 25, 20],      # 89
+    ["LUTZ2", 24, 21],      # 90
     # Hard/LUTZ2 count: 11
 
     # Hard families total count: 50
@@ -618,7 +659,7 @@ file_name = [
     # Total: 89
 ]
 
-for input_in in file_name:
+for input_in in file_name1:
     name = input_in[0]
     m = input_in[1]
     c = input_in[2]
