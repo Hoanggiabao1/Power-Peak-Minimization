@@ -90,7 +90,12 @@ def solve_assignment_problem(n, m, c, Ex_times, precedence_relations, W):
     model, X, S, Wmax = create_assignment_model(n, m, c, CpoModel(), Ex_times)
     model, cons = add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, precedence_relations)
     model.set_parameters(LogVerbosity="Quiet", TimeLimit=3600)
-    return model.solve(), len(X) + len(S), cons
+    try:
+        solution = model.solve()
+        return solution, n*m+n*c, cons
+    except Exception as e:
+        return None, n*m+n*c, cons
+
 
 def input_file(file_name):
     W = []

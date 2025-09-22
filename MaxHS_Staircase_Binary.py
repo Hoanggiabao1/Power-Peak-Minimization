@@ -2,10 +2,8 @@ from math import inf
 import time
 import threading
 from tracemalloc import start
-from numpy import var
 from pysat.solvers import Glucose3
 import fileinput
-from tabulate import tabulate
 from pysat.pb import PBEnc
 from pysat.pb import EncType
 import math
@@ -262,7 +260,7 @@ def generate_clauses(n,m,c,time_list,adj,ip1,ip2):
 
     cons = len(clauses)
     print("Constraints:",cons)
-
+    
     #10
     for j in range(n):
         for k in range(m):

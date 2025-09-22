@@ -4,10 +4,8 @@ import time
 import threading
 import signal
 from tracemalloc import start
-from numpy import var
 from pysat.solvers import Glucose3
 import fileinput
-from tabulate import tabulate
 from pysat.pb import PBEnc
 import math
 import time
@@ -263,8 +261,8 @@ def generate_clauses(n,m,c,time_list,adj,ip1,ip2):
 
     cons = len(clauses)
     print("Constraints:",cons)
-
-    #10
+    
+    10
     for j in range(n):
         for k in range(m):
             if ip1[j][k] == 1:
@@ -282,7 +280,7 @@ def generate_clauses(n,m,c,time_list,adj,ip1,ip2):
         if(time_list[j] >= c/2):
             for t in range(c-time_list[j],time_list[j]):
                 clauses.append([A[j][t]])
-    print("12 constraints:", len(clauses))
+    prin#t("12 constraints:", len(clauses))
     return clauses
 
 def solve(solver, start_time, timeout=3600):

@@ -658,7 +658,7 @@ file_name1 = [
     # Total: 89
 ]
 
-for input_in in file_name1[33:34]:
+for input_in in file_name1[40:42]:
     name = input_in[0]
     m = input_in[1]
     c = input_in[2]

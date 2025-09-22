@@ -4,6 +4,9 @@ import csv
 from gurobipy import GRB
 
 env = gurobipy.Env(empty=True)
+env.setParam('WLSACCESSID', '33d03b04-b102-4c1e-ac3a-28c7c2521a55')
+env.setParam('WLSSECRET', '818ea3b4-b954-4e96-bb07-2de85bbeb7c8')
+env.setParam('LICENSEID', 2663665)
 env.start()
 
 def create_assignment_model(n, m, c, model, Ex_times):
@@ -90,7 +93,11 @@ def solve_assignment_problem(n, m, c, Ex_times, precedence_relations, W):
     model, X, S, Wmax = create_assignment_model(n, m, c, gurobipy.Model(env=env), Ex_times)
     model, cons = add_assignment_constraints(n, m, c, model, X, S, Wmax, W, Ex_times, precedence_relations)
     model.Params.TimeLimit = 3600
+    model.Params.MemLimit = 4096  # Giới hạn bộ nhớ (MB)
+    model.Params.SoftMemLimit = 8192  # Giới hạn bộ nhớ mềm (MB)
     model.Params.LogToConsole = 0  # Nếu muốn tắt log
+    
+    print("Da het")
     model.optimize()
     return model, n*m + n*c, cons
 
@@ -171,6 +178,7 @@ def optimal(filename):
     else:
         print("No solution found.")
         write_to_csv([filename[0], n, m, c, "Timeout", var, cons, end_time - start_time])
+    solution.disposeDefaultEnv()
 
 file_name = [
     # Easy families 
@@ -310,5 +318,5 @@ file_name = [
     # Total: 89
     ]
 
-for i in range(len(file_name)):
+for i in range(35,len(file_name)):
     optimal(file_name[i])
