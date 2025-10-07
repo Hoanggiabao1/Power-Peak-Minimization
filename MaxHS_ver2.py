@@ -357,6 +357,38 @@ file_name1 = [
     # Total: 89
 ]
 
-for input_in in file_name1:
-    solve_MaxSat_SAML3P(input_in)
+file_name2 = [
+    ["WEEMAG", 63, 28], #0
+    ["WEEMAG", 63, 29], #1
+    ["WEEMAG", 62, 30], #2
+    ["WEEMAG", 62, 31],
+    ["WEEMAG", 61, 32],
+    ["WEEMAG", 61, 33],
+    ["WEEMAG", 61, 34],
+    ["WEEMAG", 60, 35],
+    ["WEEMAG", 60, 36],
+    ["WEEMAG", 60, 37],
+    ["WEEMAG", 60, 38],
+    ["WEEMAG", 60, 39],
+    ["WEEMAG", 60, 40],
+    ["WEEMAG", 59, 41],
+    ["WEEMAG", 55, 42],
+    ["WEEMAG", 50, 43],
+    ["WEEMAG", 38, 45],
+    ["WEEMAG", 34, 46],
+    ["WEEMAG", 32, 47],
+    ["WEEMAG", 33, 47],
+    ["WEEMAG", 32, 49],
+    ["WEEMAG", 32, 50],
+    ["WEEMAG", 31, 52],
+    ["WEEMAG", 31, 54],
+    ["WEEMAG", 30, 56],
+    # Hard/WEEMAG count: 26
+]
+
+inconstistant_file = [
+    29, 41, 49, 79
+]
+for i in inconstistant_file:
+    solve_MaxSat_SAML3P(file_name[i])
 

@@ -157,7 +157,7 @@ def list_inaugural_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W):
         pb_clauses = PBEnc.leq( lits=lits, weights=coeffs, 
                                 bound=UB, 
                                 top_id=start,
-                                encoding = EncType.sortnetwrk)
+                                encoding = EncType.binmerge)
         # Update variable counter for any new variables created by PBEnc
         if pb_clauses.nv > start:
             start = pb_clauses.nv + 1
@@ -198,7 +198,7 @@ def list_binary_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W):
     # Create PB constraint for lower bound: sum >= LB
     pb_clauses_lb = PBEnc.geq(lits=lits_lb, weights=coeffs_lb, bound=LB,
                                 top_id=start,
-                                encoding = EncType.sortnetwrk)
+                                encoding = EncType.binmerge)
     # Update variable counter
     if pb_clauses_lb.nv > start:
         start = pb_clauses_lb.nv + 1
@@ -229,8 +229,8 @@ def list_binary_constrain(n, m, c, UB, LB, precedence_relations, Ex_Time, W):
         # Create PB constraint: sum(power_terms) - sum(binary_terms) <= 0
         # This is equivalent to: sum(power_terms) <= sum(binary_terms)
         pb_clauses = PBEnc.leq(lits=lits, weights=coeffs, bound=upper_bound,
-                                 top_id=start,
-                                encoding = EncType.sortnetwrk)
+                                top_id=start,
+                                encoding = EncType.binmerge)
             
         # Update variable counter
         if pb_clauses.nv > start:
@@ -658,10 +658,43 @@ file_name1 = [
     # Total: 89
 ]
 
-for input_in in file_name1[40:42]:
-    name = input_in[0]
-    m = input_in[1]
-    c = input_in[2]
+inconstistant_file = [
+    29, 41, 49, 79
+]
+
+file_name2 = [
+    ["WEEMAG", 63, 28], #0
+    ["WEEMAG", 63, 29], #1
+    ["WEEMAG", 62, 30], #2
+    ["WEEMAG", 62, 31],
+    ["WEEMAG", 61, 32],
+    ["WEEMAG", 61, 33],
+    ["WEEMAG", 61, 34],
+    ["WEEMAG", 60, 35],
+    ["WEEMAG", 60, 36],
+    ["WEEMAG", 60, 37],
+    ["WEEMAG", 60, 38],
+    ["WEEMAG", 60, 39],
+    ["WEEMAG", 60, 40],
+    ["WEEMAG", 59, 41],
+    ["WEEMAG", 55, 42],
+    ["WEEMAG", 50, 43],
+    ["WEEMAG", 38, 45],
+    ["WEEMAG", 34, 46],
+    ["WEEMAG", 32, 47],
+    ["WEEMAG", 33, 47],
+    ["WEEMAG", 32, 49],
+    ["WEEMAG", 32, 50],
+    ["WEEMAG", 31, 52],
+    ["WEEMAG", 31, 54],
+    ["WEEMAG", 30, 56],
+    # Hard/WEEMAG count: 26
+]
+
+for i in range(len(file_name2)):
+    name = file_name2[i][0]
+    m = file_name2[i][1]
+    c = file_name2[i][2]
     n, W, precedence_relations, Ex_Time = input_file(name)
-    solve_MaxSat_SAML3P(n, m, c, Ex_Time, W, precedence_relations, name, input_in)
+    solve_MaxSat_SAML3P(n, m, c, Ex_Time, W, precedence_relations, name, file_name2[i])
 
